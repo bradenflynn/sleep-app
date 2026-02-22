@@ -1,0 +1,30 @@
+{
+    "expo": {
+        "name": "Night-Ops",
+        "slug": "night-ops",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/images/icon.png",
+        "userInterfaceStyle": "dark",
+        "splash": {
+            "image": "./assets/images/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#000000"
+        },
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.nightops.app",
+            "infoPlist": {
+                "NSHealthShareUsageDescription": "Night-Ops uses your health data to calculate your Performance Readiness Score and display your rank in The Squad.",
+                "NSHealthUpdateUsageDescription": "Night-Ops can sync your sleep data to improve accuracy."
+            }
+        },
+        "web": {
+            "favicon": "./assets/images/favicon.png"
+        },
+        "extra": {
+            "supabaseUrl": "YOUR_SUPABASE_URL",
+            "supabaseAnonKey": "YOUR_SUPABASE_ANON_KEY"
+        }
+    }
+}
