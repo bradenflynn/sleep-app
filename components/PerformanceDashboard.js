@@ -6,14 +6,93 @@ const { width } = Dimensions.get('window');
 const PerformanceDashboard = ({ healthData }) => {
     if (!healthData) return null;
 
-    const { indicators = {}, diagnostics = [] } = healthData;
+    const {
+        hrv,
+        rhr,
+        sleepDuration, // in minutes
+        deepSleep, // in minutes
+        remSleep, // in minutes
+        score,
+        indicators = {},
+        diagnostics = []
+    } = healthData;
+
+    // Helper functions
+    const formatTime = (minutes) => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hours}h ${mins}m`;
+    };
 
     const renderMetricLabel = (label, isLow) => (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
             <Text style={styles.metricLabel}>{label}</Text>
             {isLow && <Text style={styles.lowIndicator}> ❗ LOW</Text>}
         </View>
     );
+
+    // Sleep Composite Bar
+    const renderCompositeBar = () => {
+        const totalRaw = sleepDuration || 1; // avoid division by 0
+        const deepRaw = deepSleep || 0;
+        const remRaw = remSleep || 0;
+        const lightRaw = Math.max(0, totalRaw - deepRaw - remRaw);
+
+        // Calculate Percentages
+        const deepPct = (deepRaw / totalRaw) * 100;
+        const remPct = (remRaw / totalRaw) * 100;
+        const lightPct = (lightRaw / totalRaw) * 100;
+
+        return (
+            <View style={styles.metricContainer}>
+                {renderMetricLabel('TOTAL SLEEP', indicators.totalSleep)}
+                <Text style={styles.metricValue}>{formatTime(sleepDuration)}</Text>
+
+                {/* Composite Bar */}
+                <View style={styles.compositeBarContainer}>
+                    {deepPct > 0 && <View style={[styles.barSegment, { width: `${deepPct}%`, backgroundColor: '#3b82f6' }]} />}
+                    {remPct > 0 && <View style={[styles.barSegment, { width: `${remPct}%`, backgroundColor: '#8b5cf6' }]} />}
+                    {lightPct > 0 && <View style={[styles.barSegment, { width: `${lightPct}%`, backgroundColor: '#475569' }]} />}
+                </View>
+
+                {/* Legend Context */}
+                <View style={styles.legendContainer}>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.legendDot, { backgroundColor: '#3b82f6' }]} />
+                        <Text style={styles.legendText}>Deep {Math.round(deepPct)}%</Text>
+                        {indicators.deepSleep && <Text style={styles.lowIndicatorInline}>❗</Text>}
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.legendDot, { backgroundColor: '#8b5cf6' }]} />
+                        <Text style={styles.legendText}>REM {Math.round(remPct)}%</Text>
+                        {indicators.remSleep && <Text style={styles.lowIndicatorInline}>❗</Text>}
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.legendDot, { backgroundColor: '#475569' }]} />
+                        <Text style={styles.legendText}>Light {Math.round(lightPct)}%</Text>
+                    </View>
+                </View>
+            </View>
+        );
+    };
+
+    const renderBar = (label, value, target, isLow, suffix = '') => {
+        let pct = (value / target) * 100;
+        if (pct > 100) pct = 100;
+
+        let barColor = '#38bdf8'; // Default tactical blue
+        if (isLow) barColor = '#ef4444'; // Red if low priority warning
+
+        return (
+            <View style={styles.metricContainer}>
+                {renderMetricLabel(label, isLow)}
+                <Text style={styles.metricValue}>{value}{suffix}</Text>
+                <View style={styles.barOverlay}>
+                    <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: barColor }]} />
+                </View>
+            </View>
+        )
+    };
 
     return (
         <View style={styles.container}>
@@ -27,32 +106,13 @@ const PerformanceDashboard = ({ healthData }) => {
                 </View>
             </View>
 
-            {/* Metrics Row 1 */}
-            <View style={styles.metricsContainer}>
-                <View style={styles.metricCard}>
-                    {renderMetricLabel("HRV", indicators.hrv)}
-                    <Text style={styles.metricValue}>{healthData.hrv} <Text style={styles.metricUnit}>ms</Text></Text>
-                </View>
-                <View style={styles.metricCard}>
-                    {renderMetricLabel("RHR", indicators.rhr)}
-                    <Text style={styles.metricValue}>{healthData.rhr} <Text style={styles.metricUnit}>bpm</Text></Text>
-                </View>
-            </View>
+            <View style={styles.metricsPanel}>
+                {/* Single Composite Sleep Bar */}
+                {renderCompositeBar()}
 
-            {/* Metrics Row 2 */}
-            <View style={styles.metricsContainer}>
-                <View style={styles.metricCard}>
-                    {renderMetricLabel("TOTAL SLEEP", indicators.totalSleep)}
-                    <Text style={styles.metricValue}>
-                        {Math.floor(healthData.sleepDuration / 60)}h {healthData.sleepDuration % 60}m
-                    </Text>
-                </View>
-                <View style={styles.metricCard}>
-                    {renderMetricLabel("DEEP SLEEP", indicators.deepSleep)}
-                    <Text style={styles.metricValue}>
-                        {Math.floor(healthData.deepSleep / 60)}h {healthData.deepSleep % 60}m
-                    </Text>
-                </View>
+                {/* Heart Rate & HRV Bars */}
+                {renderBar('RESTING HR', rhr, 100, indicators.rhr, ' bpm')}
+                {renderBar('HEART RATE VARIABILITY', hrv, 150, indicators.hrv, ' ms')}
             </View>
 
             {/* Diagnostics Section */}
@@ -77,7 +137,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     headerTitle: {
-        color: '#38bdf8', // Tactical Blue Accent
+        color: '#38bdf8',
         fontSize: 14,
         fontWeight: '800',
         letterSpacing: 4,
@@ -113,47 +173,90 @@ const styles = StyleSheet.create({
         letterSpacing: 2,
         marginTop: -5,
     },
-    metricsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    metricsPanel: {
         width: width * 0.9,
-        marginBottom: 15,
-    },
-    metricCard: {
         backgroundColor: '#1e293b',
         borderRadius: 12,
-        padding: 16,
-        width: '48%',
+        padding: 20,
         borderWidth: 1,
         borderColor: '#334155',
+        marginBottom: 15,
+        gap: 25, // spacing between metrics
+    },
+    metricContainer: {
+        width: '100%',
     },
     metricLabel: {
         color: '#94a3b8',
         fontSize: 11,
         fontWeight: '700',
         letterSpacing: 1,
-        marginBottom: 8,
     },
     metricValue: {
         color: '#ffffff',
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
-    },
-    metricUnit: {
-        fontSize: 14,
-        color: '#64748b',
-        fontWeight: 'normal',
+        marginBottom: 10,
     },
     lowIndicator: {
-        color: '#ef4444', // Red alert color
+        color: '#ef4444',
         fontSize: 10,
         fontWeight: 'bold',
+        marginLeft: 6,
+    },
+    lowIndicatorInline: {
+        color: '#ef4444',
+        fontSize: 10,
+        fontWeight: 'bold',
+        marginLeft: 2,
+    },
+    barOverlay: {
+        width: '100%',
+        height: 6,
+        backgroundColor: '#0f172a', // very dark background for the bar
+        borderRadius: 3,
+        overflow: 'hidden',
+    },
+    barFill: {
+        height: '100%',
+        borderRadius: 3,
+    },
+    compositeBarContainer: {
+        width: '100%',
+        height: 10,
+        backgroundColor: '#0f172a',
+        borderRadius: 5,
+        overflow: 'hidden',
+        flexDirection: 'row',
         marginBottom: 8,
-        marginLeft: 4,
+    },
+    barSegment: {
+        height: '100%',
+    },
+    legendContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 5,
+        paddingHorizontal: 2,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    legendDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginRight: 6,
+    },
+    legendText: {
+        color: '#94a3b8',
+        fontSize: 11,
+        fontWeight: '500',
     },
     diagnosticsContainer: {
         width: width * 0.9,
-        backgroundColor: 'rgba(239, 68, 68, 0.1)', // Faint red warning box
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
         borderLeftWidth: 3,
         borderLeftColor: '#ef4444',
         padding: 16,
