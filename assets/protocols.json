@@ -1,0 +1,42 @@
+[
+  {
+    "id": "magnesium-threonate",
+    "title": "Magnesium Threonate",
+    "category": "Supplementation",
+    "description": "300-400mg of Magnesium L-Threonate or Bisglycinate 30-60 minutes before bed to promote relaxation and deep sleep.",
+    "tags": ["deep sleep", "relaxation", "supplement"],
+    "source_type": "Literature / Common Protocol"
+  },
+  {
+    "id": "apigenin",
+    "title": "Apigenin Extract",
+    "category": "Supplementation",
+    "description": "50mg of Apigenin (chamomile extract) to reduce pre-sleep anxiety and improve sleep onset.",
+    "tags": ["anxiety", "sleep onset", "supplement"],
+    "source_type": "Literature / Common Protocol"
+  },
+  {
+    "id": "temperature-drop",
+    "title": "Bedroom Temperature Drop",
+    "category": "Environment",
+    "description": "Keep the bedroom temperature between 65-68°F (18-20°C). A drop in core body temperature is required to initiate sleep.",
+    "tags": ["environment", "sleep onset", "temperature"],
+    "source_type": "Circadian Rhythm Biology"
+  },
+  {
+    "id": "light-viewing",
+    "title": "Morning Sunlight",
+    "category": "Routine",
+    "description": "View sunlight by going outside within 30-60 minutes of waking. Do this for 10-30 minutes to set your circadian clock.",
+    "tags": ["morning", "circadian rhythm", "routine"],
+    "source_type": "Chronobiology Studies"
+  },
+  {
+    "id": "blue-light-blocking",
+    "title": "Dim & Block Blue Light",
+    "category": "Environment",
+    "description": "Dim overhead lights and avoid screens (or wear blue-light blockers) 1-2 hours before bed to prevent melatonin suppression.",
+    "tags": ["environment", "melatonin", "evening"],
+    "source_type": "Sleep Hygiene Guidelines"
+  }
+]

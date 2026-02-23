@@ -1,42 +1,45 @@
-/**
- * HealthKitService.js
- * Handles interaction with Apple HealthKit.
- * Initially uses mock data for development.
- */
+import { Platform } from 'react-native';
 
-const mockSleepData = [
-  { date: '2026-02-21', duration: 420, deepSleep: 65, score: 78 },
-  { date: '2026-02-20', duration: 480, deepSleep: 90, score: 85 },
-  { date: '2026-02-19', duration: 360, deepSleep: 40, score: 62 },
-];
-
-export const HealthKitService = {
-  /**
-   * Request permissions from the user.
-   */
-  requestPermissions: async () => {
-    console.log('[HealthKit] Requesting permissions...');
-    // Real implementation would use: AppleHealthKit.initHealthKit(permissions, ...)
-    return true;
-  },
-
-  /**
-   * Fetch sleep data for the last N days.
-   */
-  getSleepData: async (days = 7) => {
-    console.log(`[HealthKit] Fetching data for last ${days} days...`);
-    // Simulated delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return mockSleepData;
-  },
-
-  /**
-   * Calculate Performance Readiness Score.
-   * Logic: Weight Deep Sleep (40%), Duration (40%), and Stability (20%).
-   */
-  calculateReadinessScore: (data) => {
-    if (!data || data.length === 0) return 0;
-    const latest = data[0];
-    return latest.score || 0;
+class HealthKitService {
+  constructor() {
+    this.isInitialized = false;
+    this.mockData = {
+      score: 82, // Aggregated 0-100 Performance Score
+      hrv: 65,   // ms
+      rhr: 52,   // bpm
+      sleepDuration: 450, // minutes (7h 30m)
+      deepSleep: 110, // minutes
+      remSleep: 95,   // minutes
+    };
   }
-};
+
+  async initialize() {
+    if (Platform.OS !== 'ios') {
+      console.warn('HealthKit is only available on iOS.');
+      return false;
+    }
+
+    // Simulate permission request delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    this.isInitialized = true;
+    return true;
+  }
+
+  async getPerformanceData() {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    // Simulate fetching data from Apple Health
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // In a real app, this would query HealthKit for the last 24 hours of data
+    // and compute a score based on our proprietary algorithm.
+    // For the MVP, we return the rich mock payload to demonstrate
+    // data retention and visualization on the Performance Dashboard.
+
+    return this.mockData;
+  }
+}
+
+export default new HealthKitService();

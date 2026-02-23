@@ -1,56 +1,91 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { HealthKitService } from './services/HealthKitService';
-import { ChatService } from './services/ChatService';
-import { Leaderboard } from './components/Leaderboard';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import HealthKitService from './services/HealthKitService';
+import ChatService from './services/ChatService';
+import PerformanceDashboard from './components/PerformanceDashboard';
 
 export default function App() {
-    const [readinessScore, setReadinessScore] = useState(0);
-    const [chatResponse, setChatResponse] = useState('');
+    const [healthData, setHealthData] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [inputText, setInputText] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        async function init() {
-            const hasPermission = await HealthKitService.requestPermissions();
-            if (hasPermission) {
-                const data = await HealthKitService.getSleepData();
-                const score = HealthKitService.calculateReadinessScore(data);
-                setReadinessScore(score);
-            }
+        async function loadData() {
+            const data = await HealthKitService.getPerformanceData();
+            setHealthData(data);
+
+            // Initial System Message
+            setMessages([
+                {
+                    role: 'assistant',
+                    content: 'Performance logs loaded. What protocol would you like to review?'
+                }
+            ]);
         }
-        init();
+        loadData();
     }, []);
 
-    const handleTestChat = async () => {
-        const response = await ChatService.generateResponse('tell me about magnesium and blue light');
-        setChatResponse(response);
+    const sendMessage = async () => {
+        if (!inputText.trim()) return;
+
+        const userMsg = { role: 'user', content: inputText };
+        setMessages(prev => [...prev, userMsg]);
+        setInputText('');
+        setIsLoading(true);
+
+        const response = await ChatService.sendMessage(userMsg.content, healthData);
+
+        setMessages(prev => [...prev, response]);
+        setIsLoading(false);
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar style="light" />
-            <ScrollView contentContainerStyle={styles.content}>
-                <Text style={styles.header}>NIGHT-OPS</Text>
+            <StatusBar barStyle="light-content" />
+            <KeyboardAvoidingView
+                style={styles.container}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+                <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                <View style={styles.scoreCard}>
-                    <Text style={styles.scoreLabel}>Readiness Score</Text>
-                    <Text style={styles.scoreValue}>{readinessScore}</Text>
-                </View>
+                    <PerformanceDashboard healthData={healthData} />
 
-                <TouchableOpacity style={styles.button} onPress={handleTestChat}>
-                    <Text style={styles.buttonText}>Test AI Retrieval</Text>
-                </TouchableOpacity>
+                    <View style={styles.chatSection}>
+                        <View style={styles.chatHeader}>
+                            <Text style={styles.chatTitle}>AI MISSION BRIEFING</Text>
+                        </View>
 
-                {chatResponse ? (
-                    <View style={styles.chatBox}>
-                        <Text style={styles.chatText}>{chatResponse}</Text>
+                        {messages.map((msg, index) => (
+                            <View key={index} style={[
+                                styles.messageBubble,
+                                msg.role === 'user' ? styles.userBubble : styles.assistantBubble
+                            ]}>
+                                <Text style={styles.messageText}>{msg.content}</Text>
+                            </View>
+                        ))}
+                        {isLoading && (
+                            <View style={[styles.messageBubble, styles.assistantBubble]}>
+                                <Text style={styles.messageText}>Processing parameters...</Text>
+                            </View>
+                        )}
                     </View>
-                ) : null}
+                </ScrollView>
 
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>Educational Purposes Only</Text>
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Query protocols (e.g., 'magnesium' or 'light')"
+                        placeholderTextColor="#64748b"
+                        value={inputText}
+                        onChangeText={setInputText}
+                        onSubmitEditing={sendMessage}
+                    />
+                    <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+                        <Text style={styles.sendButtonText}>SEND</Text>
+                    </TouchableOpacity>
                 </View>
-            </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
@@ -58,72 +93,85 @@ export default function App() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000',
+        backgroundColor: '#020617', // Very dark blue/black background
     },
-    content: {
+    scrollContent: {
         padding: 20,
         alignItems: 'center',
     },
-    header: {
-        fontSize: 32,
-        fontWeight: '900',
-        color: '#fff',
-        letterSpacing: 4,
-        marginVertical: 40,
-    },
-    scoreCard: {
+    chatSection: {
         width: '100%',
-        backgroundColor: '#111',
-        borderRadius: 20,
-        padding: 30,
-        alignItems: 'center',
+        marginTop: 10,
+        backgroundColor: '#0f172a',
+        borderRadius: 16,
+        padding: 16,
         borderWidth: 1,
-        borderColor: '#333',
-        marginBottom: 30,
+        borderColor: '#1e293b',
     },
-    scoreLabel: {
-        color: '#888',
-        fontSize: 14,
-        textTransform: 'uppercase',
+    chatHeader: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#334155',
+        paddingBottom: 10,
+        marginBottom: 15,
+    },
+    chatTitle: {
+        color: '#94a3b8',
+        fontSize: 12,
+        fontWeight: '700',
         letterSpacing: 2,
     },
-    scoreValue: {
-        color: '#fff',
-        fontSize: 72,
-        fontWeight: '200',
-        marginTop: 10,
+    messageBubble: {
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 12,
+        maxWidth: '85%',
     },
-    button: {
-        backgroundColor: '#fff',
-        paddingVertical: 15,
-        paddingHorizontal: 30,
-        borderRadius: 30,
-        marginBottom: 30,
+    userBubble: {
+        backgroundColor: '#0ea5e9', // Tactical Acccents
+        alignSelf: 'flex-end',
+        borderBottomRightRadius: 2,
     },
-    buttonText: {
-        color: '#000',
-        fontWeight: 'bold',
-        fontSize: 16,
+    assistantBubble: {
+        backgroundColor: '#1e293b', // Dark gray/blue panel
+        alignSelf: 'flex-start',
+        borderBottomLeftRadius: 2,
+        borderWidth: 1,
+        borderColor: '#334155',
     },
-    chatBox: {
-        width: '100%',
-        backgroundColor: '#1a1a1a',
-        borderRadius: 15,
-        padding: 20,
-        borderLeftWidth: 4,
-        borderLeftColor: '#444',
-    },
-    chatText: {
-        color: '#ccc',
+    messageText: {
+        color: '#f8fafc',
+        fontSize: 15,
         lineHeight: 22,
-        fontSize: 14,
     },
-    footer: {
-        marginTop: 50,
+    inputContainer: {
+        flexDirection: 'row',
+        padding: 15,
+        backgroundColor: '#0f172a',
+        borderTopWidth: 1,
+        borderTopColor: '#1e293b',
     },
-    footerText: {
-        color: '#444',
-        fontSize: 10,
-        textTransform: 'uppercase',
-    }
+    input: {
+        flex: 1,
+        backgroundColor: '#1e293b',
+        color: '#f8fafc',
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        marginRight: 10,
+        borderWidth: 1,
+        borderColor: '#334155',
+    },
+    sendButton: {
+        backgroundColor: '#0ea5e9',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        borderRadius: 8,
+    },
+    sendButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+        letterSpacing: 1,
+        fontSize: 12,
+    },
 });

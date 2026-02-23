@@ -1,54 +1,46 @@
-/**
- * ChatService.js
- * Handles retrieval-based AI chat logic.
- * Grounded in peer-reviewed studies and influencer protocols.
- */
+import protocols from '../assets/protocols.json';
 
-const studyDatabase = [
-    {
-        topic: 'magnesium',
-        content: 'Studies (e.g., Abbasi et al., 2012) show that Magnesium supplementation can improve sleep quality and melatonin levels in elderly adults.',
-        source: 'Journal of Research in Medical Sciences'
-    },
-    {
-        topic: 'mouth tape',
-        content: 'Nasal breathing vs. mouth breathing during sleep: Research suggests nasal breathing can improve oxygen saturation and reduce snoring.',
-        source: 'Various ENT Studies'
-    },
-    {
-        topic: 'blue light',
-        content: 'Clear vs. Tinted: Blue-light blocking glasses, especially amber or red-tinted, have been shown to prevent melatonin suppression if worn 2-3 hours before bed.',
-        source: 'Chronobiology International'
+class ChatService {
+  /**
+   * Simulates sending a message to the AI and getting a grounded response.
+   * In the MVP, this just searches the local protocols.json for keywords.
+   */
+  async sendMessage(message, healthData) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const lowerMessage = message.toLowerCase();
+    
+    // Find matching protocols based on keywords
+    let matchedProtocols = protocols.filter(p => {
+        return p.title.toLowerCase().includes(lowerMessage) || 
+               p.tags.some(tag => tag.toLowerCase().includes(lowerMessage)) ||
+               p.description.toLowerCase().includes(lowerMessage);
+    });
+
+    if (matchedProtocols.length === 0) {
+      // If no direct match, check health data and provide a general recommendation
+      if (healthData && healthData.score < 70) {
+        matchedProtocols = [protocols.find(p => p.id === 'magnesium-threonate') || protocols[0]];
+      } else {
+         matchedProtocols = [protocols.find(p => p.id === 'light-viewing') || protocols[0]];
+      }
     }
-];
 
-export const ChatService = {
-    /**
-     * Query the "Knowledge Base" (Retrieval step).
-     */
-    queryKnowledgeBase: (query) => {
-        console.log(`[Chat] Querying knowledge base for: ${query}`);
-        const normalizedQuery = query.toLowerCase();
+    // Format the response based on the matched protocols
+    let responseText = "Based on your inquiry and current data, here is a protocol to consider:\n\n";
+    matchedProtocols.forEach((p, index) => {
+        if (index > 1) return; // Limit to top 2 to avoid overwhelming
+        responseText += `**${p.title}** (${p.category})\n`;
+        responseText += `${p.description}\n`;
+        responseText += `*Source: ${p.source_type}*\n\n`;
+    });
 
-        // Simple mock retrieval logic
-        const results = studyDatabase.filter(item =>
-            normalizedQuery.includes(item.topic)
-        );
+    return {
+      role: 'assistant',
+      content: responseText.trim(),
+    };
+  }
+}
 
-        return results;
-    },
-
-    /**
-     * Generate a response based on retrieved data (RAG).
-     */
-    generateResponse: async (userInput) => {
-        const retrievedData = ChatService.queryKnowledgeBase(userInput);
-
-        if (retrievedData.length === 0) {
-            return "I couldn't find a specific study on that in my current database. I recommend focusing on the core 'Night-Ops' protocols: Magnesium, Mouth Tape, and Blue Light blocking.";
-        }
-
-        const citations = retrievedData.map(d => `${d.content} (Source: ${d.source})`).join('\n\n');
-        return `Based on medical literature:\n\n${citations}\n\nNote: This is for educational purposes only.`;
-    }
-};
+export default new ChatService();
