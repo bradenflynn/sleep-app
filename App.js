@@ -27,24 +27,30 @@ export default function App() {
         loadData();
     }, []);
 
-    const handleFileUpload = (event) => {
+    const handleFileUpload = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const xmlContent = e.target.result;
-            const synthesizedData = XMLParserService.parseHealthExport(xmlContent);
+        setIsLoading(true);
+        try {
+            const synthesizedData = await XMLParserService.processFile(file);
             if (synthesizedData) {
                 HealthKitService.setImportedData(synthesizedData);
                 setHealthData(synthesizedData);
                 setMessages(prev => [...prev, {
                     role: 'assistant',
-                    content: 'Health data successfully parsed and deployed to dashboard. Performance metrics synchronized.'
+                    content: 'Health data successfully parsed. Tactical Diagnostics updated based on physiological targets.'
+                }]);
+            } else {
+                setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: 'Failed to extract performance metrics from the provided file.'
                 }]);
             }
-        };
-        reader.readAsText(file);
+        } catch (e) {
+            console.error(e);
+        }
+        setIsLoading(false);
     };
 
     const sendMessage = async () => {
@@ -84,7 +90,7 @@ export default function App() {
                             type="file"
                             style={{ display: 'none' }}
                             onChange={handleFileUpload}
-                            accept=".xml"
+                            accept=".xml,.zip"
                         />
                     </View>
 
