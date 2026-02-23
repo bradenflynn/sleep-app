@@ -10,6 +10,7 @@ export default function App() {
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('DASHBOARD');
 
     useEffect(() => {
         async function loadData() {
@@ -74,60 +75,83 @@ export default function App() {
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-
-                    <PerformanceDashboard healthData={healthData} />
-
-                    <View style={styles.importSection}>
-                        <TouchableOpacity
-                            style={styles.importButton}
-                            onPress={() => document.getElementById('health-upload').click()}
-                        >
-                            <Text style={styles.importButtonText}>TACTICAL DATA INTAKE (EXPORT.XML)</Text>
-                        </TouchableOpacity>
-                        <input
-                            id="health-upload"
-                            type="file"
-                            style={{ display: 'none' }}
-                            onChange={handleFileUpload}
-                            accept=".xml,.zip"
-                        />
-                    </View>
-
-                    <View style={styles.chatSection}>
-                        <View style={styles.chatHeader}>
-                            <Text style={styles.chatTitle}>AI MISSION BRIEFING</Text>
-                        </View>
-
-                        {messages.map((msg, index) => (
-                            <View key={index} style={[
-                                styles.messageBubble,
-                                msg.role === 'user' ? styles.userBubble : styles.assistantBubble
-                            ]}>
-                                <Text style={styles.messageText}>{msg.content}</Text>
-                            </View>
-                        ))}
-                        {isLoading && (
-                            <View style={[styles.messageBubble, styles.assistantBubble]}>
-                                <Text style={styles.messageText}>Processing parameters...</Text>
-                            </View>
-                        )}
-                    </View>
-                </ScrollView>
-
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Query protocols (e.g., 'magnesium' or 'light')"
-                        placeholderTextColor="#64748b"
-                        value={inputText}
-                        onChangeText={setInputText}
-                        onSubmitEditing={sendMessage}
-                    />
-                    <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-                        <Text style={styles.sendButtonText}>SEND</Text>
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'DASHBOARD' && styles.activeTab]}
+                        onPress={() => setActiveTab('DASHBOARD')}
+                    >
+                        <Text style={[styles.tabText, activeTab === 'DASHBOARD' && styles.activeTabText]}>DASHBOARD</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'PROTOCOLS' && styles.activeTab]}
+                        onPress={() => setActiveTab('PROTOCOLS')}
+                    >
+                        <Text style={[styles.tabText, activeTab === 'PROTOCOLS' && styles.activeTabText]}>PROTOCOLS</Text>
                     </TouchableOpacity>
                 </View>
+
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+
+                    {activeTab === 'DASHBOARD' && (
+                        <>
+                            <PerformanceDashboard healthData={healthData} />
+
+                            <View style={styles.importSection}>
+                                <TouchableOpacity
+                                    style={styles.importButton}
+                                    onPress={() => document.getElementById('health-upload').click()}
+                                >
+                                    <Text style={styles.importButtonText}>TACTICAL DATA INTAKE (EXPORT.XML / ZIP)</Text>
+                                </TouchableOpacity>
+                                <input
+                                    id="health-upload"
+                                    type="file"
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileUpload}
+                                    accept=".xml,.zip"
+                                />
+                            </View>
+                        </>
+                    )}
+
+                    {activeTab === 'PROTOCOLS' && (
+                        <View style={styles.chatSection}>
+                            <View style={styles.chatHeader}>
+                                <Text style={styles.chatTitle}>AI MISSION BRIEFING</Text>
+                            </View>
+
+                            {messages.map((msg, index) => (
+                                <View key={index} style={[
+                                    styles.messageBubble,
+                                    msg.role === 'user' ? styles.userBubble : styles.assistantBubble
+                                ]}>
+                                    <Text style={styles.messageText}>{msg.content}</Text>
+                                </View>
+                            ))}
+                            {isLoading && (
+                                <View style={[styles.messageBubble, styles.assistantBubble]}>
+                                    <Text style={styles.messageText}>Processing parameters...</Text>
+                                </View>
+                            )}
+                        </View>
+                    )}
+                </ScrollView>
+
+                {activeTab === 'PROTOCOLS' && (
+                    <View style={styles.inputContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Ask about improving your sleep..."
+                            placeholderTextColor="#64748b"
+                            value={inputText}
+                            onChangeText={setInputText}
+                            onSubmitEditing={sendMessage}
+                        />
+                        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+                            <Text style={styles.sendButtonText}>SEND</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -137,6 +161,30 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#020617', // Very dark blue/black background
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: '#1e293b',
+        backgroundColor: '#0f172a',
+    },
+    tab: {
+        flex: 1,
+        paddingVertical: 15,
+        alignItems: 'center',
+    },
+    activeTab: {
+        borderBottomWidth: 2,
+        borderBottomColor: '#38bdf8',
+    },
+    tabText: {
+        color: '#64748b',
+        fontSize: 12,
+        fontWeight: 'bold',
+        letterSpacing: 1,
+    },
+    activeTabText: {
+        color: '#38bdf8',
     },
     scrollContent: {
         padding: 20,

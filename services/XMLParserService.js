@@ -41,55 +41,75 @@ class XMLParserService {
     parseHealthExport(xmlString) {
         console.log("Parsing Apple Health Export XML...");
 
-        const results = {
-            hrv: [],
-            rhr: [],
-            sleep: [],
+        const results = { hrv: [], rhr: [], sleep: [] };
+
+        // Helper to extract attributes from the <Record> tag string
+        const getAttr = (str, attr) => {
+            const match = str.match(new RegExp(`\\s${attr}="([^"]*)"`));
+            return match ? match[1] : null;
         };
 
-        // We only want recent data for the dashboard (e.g., last 30 days of HRV/RHR, last night's sleep)
-        // For MVP RegExp parsing, we just grab everything and average it, 
-        // but in a production app we would filter by the `endDate` attribute.
-
-        const hrvRegex = /<Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN"[^>]*?value="([\d.]+)"/g;
+        const recordRegex = /<Record type="([^"]+)"([^>]*)>/g;
         let match;
-        while ((match = hrvRegex.exec(xmlString)) !== null) {
-            results.hrv.push(parseFloat(match[1]));
-        }
-
-        const rhrRegex = /<Record type="HKQuantityTypeIdentifierRestingHeartRate"[^>]*?value="([\d.]+)"/g;
-        while ((match = rhrRegex.exec(xmlString)) !== null) {
-            results.rhr.push(parseFloat(match[1]));
-        }
-
-        // Capture sleep stages
-        const sleepRegex = /<Record type="HKCategoryTypeIdentifierSleepAnalysis"[^>]*?value="(.*?)"[^>]*?startDate="(.*?)"[^>]*?endDate="(.*?)"/g;
-        while ((match = sleepRegex.exec(xmlString)) !== null) {
+        while ((match = recordRegex.exec(xmlString)) !== null) {
             const type = match[1];
-            const start = new Date(match[2]);
-            const end = new Date(match[3]);
-            const duration = Math.max(0, (end - start) / (1000 * 60)); // minutes
+            const attrStr = match[2];
 
-            results.sleep.push({ type, duration, end });
+            if (type === "HKQuantityTypeIdentifierHeartRateVariabilitySDNN") {
+                const date = new Date(getAttr(attrStr, "startDate"));
+                const value = parseFloat(getAttr(attrStr, "value"));
+                if (!isNaN(value)) results.hrv.push({ date, value });
+            } else if (type === "HKQuantityTypeIdentifierRestingHeartRate") {
+                const date = new Date(getAttr(attrStr, "startDate"));
+                const value = parseFloat(getAttr(attrStr, "value"));
+                if (!isNaN(value)) results.rhr.push({ date, value });
+            } else if (type === "HKCategoryTypeIdentifierSleepAnalysis") {
+                const val = getAttr(attrStr, "value");
+                const start = new Date(getAttr(attrStr, "startDate"));
+                const end = new Date(getAttr(attrStr, "endDate"));
+                const duration = Math.max(0, (end - start) / (1000 * 60)); // minutes
+                results.sleep.push({ type: val, duration, end });
+            }
         }
 
         return this.synthesizeData(results);
     }
 
     /**
-     * Synthesizes raw records into a PerformanceDashboard payload using Apple Guidelines.
+     * Synthesizes raw records into a PerformanceDashboard payload, filtering by recent data.
      */
     synthesizeData(raw) {
         if (raw.hrv.length === 0 && raw.rhr.length === 0 && raw.sleep.length === 0) return null;
 
-        const avgHrv = raw.hrv.length > 0 ? Math.round(raw.hrv.reduce((a, b) => a + b, 0) / raw.hrv.length) : null;
-        const avgRhr = raw.rhr.length > 0 ? Math.round(raw.rhr.reduce((a, b) => a + b, 0) / raw.rhr.length) : null;
+        // Find the most recent date to use as "Today"
+        let maxDate = 0;
+        raw.sleep.forEach(s => { if (s.end > maxDate) maxDate = s.end; });
+        if (maxDate === 0) {
+            raw.rhr.forEach(r => { if (r.date > maxDate) maxDate = r.date; });
+            raw.hrv.forEach(h => { if (h.date > maxDate) maxDate = h.date; });
+        }
+
+        let filteredSleep = raw.sleep;
+        let filteredHrv = raw.hrv;
+        let filteredRhr = raw.rhr;
+
+        if (maxDate !== 0) {
+            const dayInMs = 24 * 60 * 60 * 1000;
+            // Only consider sleep from the last 24 hours of the max date
+            filteredSleep = raw.sleep.filter(s => (maxDate - s.end) <= dayInMs);
+            // Consider 7 day average for RHR/HRV for better baseline stabilization
+            filteredHrv = raw.hrv.filter(h => (maxDate - h.date) <= dayInMs * 7);
+            filteredRhr = raw.rhr.filter(r => (maxDate - r.date) <= dayInMs * 7);
+        }
+
+        const avgHrv = filteredHrv.length > 0 ? Math.round(filteredHrv.reduce((a, b) => a + b.value, 0) / filteredHrv.length) : null;
+        const avgRhr = filteredRhr.length > 0 ? Math.round(filteredRhr.reduce((a, b) => a + b.value, 0) / filteredRhr.length) : null;
 
         let totalSleep = 0;
         let deepSleep = 0;
         let remSleep = 0;
 
-        raw.sleep.forEach(s => {
+        filteredSleep.forEach(s => {
             if (s.type.includes('Asleep') || s.type.includes('Unspecified') || s.type.includes('InBed')) {
                 totalSleep += s.duration;
                 if (s.type.includes('Deep')) deepSleep += s.duration;
