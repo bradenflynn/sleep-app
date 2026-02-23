@@ -1,9 +1,13 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Linking, LayoutAnimation } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
 const PerformanceDashboard = ({ healthData }) => {
+    const [habit1, setHabit1] = useState(false);
+    const [habit2, setHabit2] = useState(false);
+    const [habit3, setHabit3] = useState(false);
+
     if (!healthData) return null;
 
     const {
@@ -146,6 +150,20 @@ const PerformanceDashboard = ({ healthData }) => {
                     ))}
                 </View>
             )}
+
+            {/* Tactical Resources Links */}
+            <View style={styles.resourcesContainer}>
+                <Text style={styles.resourcesTitle}>RECOMMENDED INTEL (HUBERMAN / FMF)</Text>
+                <TouchableOpacity onPress={() => Linking.openURL('https://www.hubermanlab.com/newsletter/toolkit-for-sleep')}>
+                    <Text style={styles.resourceLink}>• Toolkit for Sleep (Huberman Lab)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('https://www.hubermanlab.com/neural-network/non-sleep-deep-rest-protocols')}>
+                    <Text style={styles.resourceLink}>• NSDR Protocols & Practice</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('https://www.foundmyfitness.com/topics/sleep')}>
+                    <Text style={styles.resourceLink}>• FoundMyFitness: Deep Sleep Dynamics</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -321,18 +339,51 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     checkboxEmpty: {
-        width: 20,
-        height: 20,
+        width: 22,
+        height: 22,
         borderRadius: 4,
         borderWidth: 2,
         borderColor: '#64748b',
         marginRight: 12,
         backgroundColor: '#0f172a',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    checkboxFilled: {
+        backgroundColor: '#0ea5e9',
+        borderColor: '#0ea5e9',
+    },
+    checkIcon: {
+        color: '#ffffff',
+        fontSize: 14,
+        fontWeight: 'bold',
     },
     habitText: {
         color: '#e2e8f0',
         fontSize: 14,
         fontWeight: '500',
+    },
+    habitTextDone: {
+        color: '#64748b',
+        textDecorationLine: 'line-through',
+    },
+    resourcesContainer: {
+        width: width * 0.9,
+        padding: 16,
+        marginTop: 10,
+    },
+    resourcesTitle: {
+        color: '#64748b',
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 2,
+        marginBottom: 10,
+    },
+    resourceLink: {
+        color: '#38bdf8',
+        fontSize: 13,
+        marginBottom: 8,
+        textDecorationLine: 'underline',
     }
 });
 

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, StatusBar, Image, LayoutAnimation, UIManager } from 'react-native';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import HealthKitService from './services/HealthKitService';
 import ChatService from './services/ChatService';
 import PerformanceDashboard from './components/PerformanceDashboard';
@@ -68,6 +72,11 @@ export default function App() {
         setIsLoading(false);
     };
 
+    const handleTabChange = (tabName) => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setActiveTab(tabName);
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" />
@@ -78,13 +87,13 @@ export default function App() {
                 <View style={styles.tabContainer}>
                     <TouchableOpacity
                         style={[styles.tab, activeTab === 'DASHBOARD' && styles.activeTab]}
-                        onPress={() => setActiveTab('DASHBOARD')}
+                        onPress={() => handleTabChange('DASHBOARD')}
                     >
                         <Text style={[styles.tabText, activeTab === 'DASHBOARD' && styles.activeTabText]}>DASHBOARD</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.tab, activeTab === 'PROTOCOLS' && styles.activeTab]}
-                        onPress={() => setActiveTab('PROTOCOLS')}
+                        onPress={() => handleTabChange('PROTOCOLS')}
                     >
                         <Text style={[styles.tabText, activeTab === 'PROTOCOLS' && styles.activeTabText]}>PROTOCOLS</Text>
                     </TouchableOpacity>
@@ -122,15 +131,26 @@ export default function App() {
 
                             {messages.map((msg, index) => (
                                 <View key={index} style={[
-                                    styles.messageBubble,
-                                    msg.role === 'user' ? styles.userBubble : styles.assistantBubble
+                                    styles.messageWrapper,
+                                    msg.role === 'user' ? styles.userWrapper : styles.assistantWrapper
                                 ]}>
-                                    <Text style={styles.messageText}>{msg.content}</Text>
+                                    {msg.role === 'assistant' && (
+                                        <Image source={require('./assets/huberman_bw.png')} style={styles.avatar} />
+                                    )}
+                                    <View style={[
+                                        styles.messageBubble,
+                                        msg.role === 'user' ? styles.userBubble : styles.assistantBubble
+                                    ]}>
+                                        <Text style={styles.messageText}>{msg.content}</Text>
+                                    </View>
                                 </View>
                             ))}
                             {isLoading && (
-                                <View style={[styles.messageBubble, styles.assistantBubble]}>
-                                    <Text style={styles.messageText}>Processing parameters...</Text>
+                                <View style={[styles.messageWrapper, styles.assistantWrapper]}>
+                                    <Image source={require('./assets/huberman_bw.png')} style={styles.avatar} />
+                                    <View style={[styles.messageBubble, styles.assistantBubble]}>
+                                        <Text style={styles.messageText}>Processing parameters...</Text>
+                                    </View>
                                 </View>
                             )}
                         </View>
@@ -211,10 +231,28 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         letterSpacing: 2,
     },
+    messageWrapper: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        marginBottom: 12,
+        width: '100%',
+    },
+    userWrapper: {
+        justifyContent: 'flex-end',
+    },
+    assistantWrapper: {
+        justifyContent: 'flex-start',
+    },
+    avatar: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        marginRight: 8,
+        backgroundColor: '#ffffff',
+    },
     messageBubble: {
         padding: 12,
         borderRadius: 8,
-        marginBottom: 12,
         maxWidth: '85%',
     },
     userBubble: {

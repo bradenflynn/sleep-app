@@ -32,6 +32,13 @@ class ChatService {
       }
     }
 
+    // Find matching protocols based on keywords
+    let matchedProtocols = protocols.filter(p => {
+      return p.title.toLowerCase().includes(lowerMessage) ||
+        p.tags.some(tag => tag.toLowerCase().includes(lowerMessage)) ||
+        p.description.toLowerCase().includes(lowerMessage);
+    });
+
     // If no direct keyword match, fallback to logic based on scores/inferred intent
     if (matchedProtocols.length === 0) {
       if (lowerMessage.includes('deep sleep')) {
