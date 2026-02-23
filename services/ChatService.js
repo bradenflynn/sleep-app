@@ -32,30 +32,45 @@ class ChatService {
       }
     }
 
-    // Find matching protocols based on keywords
-    let matchedProtocols = protocols.filter(p => {
-      return p.title.toLowerCase().includes(lowerMessage) ||
-        p.tags.some(tag => tag.toLowerCase().includes(lowerMessage)) ||
-        p.description.toLowerCase().includes(lowerMessage);
-    });
-
+    // If no direct keyword match, fallback to logic based on scores/inferred intent
     if (matchedProtocols.length === 0) {
       if (lowerMessage.includes('deep sleep')) {
-        matchedProtocols = [protocols.find(p => p.id === 'temperature-drop') || protocols[0]];
+        matchedProtocols = protocols.filter(p => p.tags.includes('deep sleep'));
       } else if (lowerMessage.includes('rem')) {
-        matchedProtocols = [protocols.find(p => p.id === 'magnesium-threonate') || protocols[0]];
+        matchedProtocols = protocols.filter(p => p.tags.includes('rem'));
+      } else if (lowerMessage.includes('hrv') || lowerMessage.includes('heart rate variability')) {
+        matchedProtocols = protocols.filter(p => p.tags.includes('hrv'));
       } else if (healthData && healthData.score < 70) {
-        matchedProtocols = [protocols.find(p => p.id === 'nsdr-huberman') || protocols[0]];
+        matchedProtocols = [
+          protocols.find(p => p.id === 'nsdr-huberman'),
+          protocols.find(p => p.id === 'physiological-sigh')
+        ].filter(Boolean);
       } else {
-        matchedProtocols = [protocols.find(p => p.id === '4-7-8-breathing') || protocols[0]];
+        // Generic fallback
+        matchedProtocols = [
+          protocols.find(p => p.id === 'morning-sunlight'),
+          protocols.find(p => p.id === 'consistent-schedule')
+        ].filter(Boolean);
       }
     }
 
-    // Format the response
-    let responseText = "Based on your inquiry, here is a protocol to consider:\n\n";
-    matchedProtocols.forEach((p, index) => {
-      if (index > 1) return; // Limit to top 2 to avoid overwhelming
-      responseText += `**${p.title}** (${p.category})\n`;
+    // Ensure we only provide a maximum of 3 options
+    matchedProtocols = matchedProtocols.slice(0, 3);
+
+    // Build the direct, fluff-free response
+    let responseText = "";
+
+    // Add a simple "why" based on the user's intent if it can be inferred
+    if (lowerMessage.includes('deep sleep')) {
+      responseText += "To improve Deep Sleep, you must facilitate the natural drop in core body temperature and promote early-day cortisol pulses.\n\n";
+    } else if (lowerMessage.includes('rem')) {
+      responseText += "To improve REM Sleep, you must strictly anchor your circadian rhythm and remove REM-suppressants from your evening routine.\n\n";
+    } else if (lowerMessage.includes('hrv') || lowerMessage.includes('heart rate variability')) {
+      responseText += "To increase HRV, you must manually stimulate the vagus nerve and shift your autonomic nervous system from sympathetic to parasympathetic dominance.\n\n";
+    }
+
+    matchedProtocols.forEach((p) => {
+      responseText += `**${p.title}**\n`;
       responseText += `${p.description}\n`;
       responseText += `*Source: ${p.source_type}*\n\n`;
     });

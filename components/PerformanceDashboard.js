@@ -50,25 +50,25 @@ const PerformanceDashboard = ({ healthData }) => {
 
                 {/* Composite Bar */}
                 <View style={styles.compositeBarContainer}>
-                    {deepPct > 0 && <View style={[styles.barSegment, { width: `${deepPct}%`, backgroundColor: '#3b82f6' }]} />}
-                    {remPct > 0 && <View style={[styles.barSegment, { width: `${remPct}%`, backgroundColor: '#8b5cf6' }]} />}
-                    {lightPct > 0 && <View style={[styles.barSegment, { width: `${lightPct}%`, backgroundColor: '#475569' }]} />}
+                    {deepPct > 0 && <View style={[styles.barSegment, { width: `${deepPct}%`, backgroundColor: '#0ea5e9' }]} />}
+                    {remPct > 0 && <View style={[styles.barSegment, { width: `${remPct}%`, backgroundColor: '#f59e0b' }]} />}
+                    {lightPct > 0 && <View style={[styles.barSegment, { width: `${lightPct}%`, backgroundColor: '#64748b' }]} />}
                 </View>
 
                 {/* Legend Context */}
                 <View style={styles.legendContainer}>
                     <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, { backgroundColor: '#3b82f6' }]} />
+                        <View style={[styles.legendDot, { backgroundColor: '#0ea5e9' }]} />
                         <Text style={styles.legendText}>Deep {Math.round(deepPct)}%</Text>
                         {indicators.deepSleep && <Text style={styles.lowIndicatorInline}>❗</Text>}
                     </View>
                     <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, { backgroundColor: '#8b5cf6' }]} />
+                        <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
                         <Text style={styles.legendText}>REM {Math.round(remPct)}%</Text>
                         {indicators.remSleep && <Text style={styles.lowIndicatorInline}>❗</Text>}
                     </View>
                     <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, { backgroundColor: '#475569' }]} />
+                        <View style={[styles.legendDot, { backgroundColor: '#64748b' }]} />
                         <Text style={styles.legendText}>Light {Math.round(lightPct)}%</Text>
                     </View>
                 </View>
@@ -113,6 +113,26 @@ const PerformanceDashboard = ({ healthData }) => {
                 {/* Heart Rate & HRV Bars */}
                 {renderBar('RESTING HR', rhr, 100, indicators.rhr, ' bpm')}
                 {renderBar('HEART RATE VARIABILITY', hrv, 150, indicators.hrv, ' ms')}
+            </View>
+
+            {/* Daily Optimization Checklist */}
+            <View style={styles.habitTrackerContainer}>
+                <Text style={styles.habitTrackerTitle}>DAILY OPTIMIZATION PROTOCOLS</Text>
+
+                <View style={styles.habitItem}>
+                    <View style={styles.checkboxEmpty} />
+                    <Text style={styles.habitText}>Morning Sun Viewed (10+ min)</Text>
+                </View>
+
+                <View style={styles.habitItem}>
+                    <View style={styles.checkboxEmpty} />
+                    <Text style={styles.habitText}>Caffeine Cutoff Met (2:00 PM)</Text>
+                </View>
+
+                <View style={styles.habitItem}>
+                    <View style={styles.checkboxEmpty} />
+                    <Text style={styles.habitText}>Breathwork Before Bed (5 min)</Text>
+                </View>
             </View>
 
             {/* Diagnostics Section */}
@@ -277,6 +297,42 @@ const styles = StyleSheet.create({
         color: '#cbd5e1',
         fontSize: 13,
         lineHeight: 18,
+    },
+    habitTrackerContainer: {
+        width: width * 0.9,
+        backgroundColor: '#1e293b',
+        borderWidth: 1,
+        borderColor: '#38bdf8',
+        padding: 16,
+        borderRadius: 8,
+        marginTop: 5,
+        marginBottom: 10,
+    },
+    habitTrackerTitle: {
+        color: '#38bdf8',
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 2,
+        marginBottom: 15,
+    },
+    habitItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    checkboxEmpty: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: '#64748b',
+        marginRight: 12,
+        backgroundColor: '#0f172a',
+    },
+    habitText: {
+        color: '#e2e8f0',
+        fontSize: 14,
+        fontWeight: '500',
     }
 });
 
