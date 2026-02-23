@@ -1,42 +1,81 @@
 [
   {
+    "id": "creatine-sleep-deprivation",
+    "title": "Creatine for Sleep Fatigue",
+    "category": "Supplementation",
+    "description": "5-10g of Creatine Monohydrate daily. In acute sleep deprivation, doses up to 20g (0.35g/kg) have been shown to preserve cognitive function and processing speed by maintaining brain ATP levels.",
+    "tags": [
+      "fatigue",
+      "cognition",
+      "sleep deprivation",
+      "supplement"
+    ],
+    "source_type": "Scientific Study (MRI/MRS Evidence)",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/38454942/"
+  },
+  {
+    "id": "nsdr-huberman",
+    "title": "NSDR (Non-Sleep Deep Rest)",
+    "category": "Routine",
+    "description": "A 10-30 minute guided protocol (Yoga Nidra style) used to transition the nervous system from a high-alert state to deep relaxation. Effective for mid-day recovery or falling back asleep at 3 AM.",
+    "tags": [
+      "recovery",
+      "relaxation",
+      "neuroplasticity",
+      "huberman"
+    ],
+    "source_type": "Stanford Neuroscience / Protocol",
+    "source_url": "https://www.hubermanlab.com/neural-network/non-sleep-deep-rest-protocols"
+  },
+  {
+    "id": "4-7-8-breathing",
+    "title": "4-7-8 Breathing",
+    "category": "Breathing",
+    "description": "Inhale for 4s, hold for 7s, exhale for 8s. Repeat 4 times. This specific ratio activates the parasympathetic nervous system and stimulates the vagus nerve to lower heart rate rapidly.",
+    "tags": [
+      "heart rate",
+      "anxiety",
+      "vagus nerve",
+      "breathing"
+    ],
+    "source_type": "Dr. Andrew Weil / Clinical Utility",
+    "source_url": "https://www.drweil.com/health-wellness/body-mind-spirit/stress-anxiety/breathing-exercises-4-7-8-breath/"
+  },
+  {
+    "id": "box-breathing",
+    "title": "Box Breathing",
+    "category": "Breathing",
+    "description": "Inhale 4s, hold 4s, exhale 4s, hold 4s. Used by tactical teams (Navy SEALs) to maintain calm under high stress. Stabilizes the autonomic nervous system.",
+    "tags": [
+      "stress",
+      "focus",
+      "tactical",
+      "breathing"
+    ],
+    "source_type": "Tactical Performance Protocol"
+  },
+  {
     "id": "magnesium-threonate",
     "title": "Magnesium Threonate",
     "category": "Supplementation",
-    "description": "300-400mg of Magnesium L-Threonate or Bisglycinate 30-60 minutes before bed to promote relaxation and deep sleep.",
-    "tags": ["deep sleep", "relaxation", "supplement"],
-    "source_type": "Literature / Common Protocol"
-  },
-  {
-    "id": "apigenin",
-    "title": "Apigenin Extract",
-    "category": "Supplementation",
-    "description": "50mg of Apigenin (chamomile extract) to reduce pre-sleep anxiety and improve sleep onset.",
-    "tags": ["anxiety", "sleep onset", "supplement"],
+    "description": "300-400mg of Magnesium L-Threonate 30-60 minutes before bed. Crosses the blood-brain barrier more effectively than other forms to promote GABAergic signaling.",
+    "tags": [
+      "deep sleep",
+      "relaxation",
+      "supplement"
+    ],
     "source_type": "Literature / Common Protocol"
   },
   {
     "id": "temperature-drop",
     "title": "Bedroom Temperature Drop",
     "category": "Environment",
-    "description": "Keep the bedroom temperature between 65-68°F (18-20°C). A drop in core body temperature is required to initiate sleep.",
-    "tags": ["environment", "sleep onset", "temperature"],
+    "description": "Keep the bedroom temperature between 65-68°F (18-20°C). Facilitates the natural drop in core body temperature required for sleep onset.",
+    "tags": [
+      "environment",
+      "sleep onset",
+      "temperature"
+    ],
     "source_type": "Circadian Rhythm Biology"
-  },
-  {
-    "id": "light-viewing",
-    "title": "Morning Sunlight",
-    "category": "Routine",
-    "description": "View sunlight by going outside within 30-60 minutes of waking. Do this for 10-30 minutes to set your circadian clock.",
-    "tags": ["morning", "circadian rhythm", "routine"],
-    "source_type": "Chronobiology Studies"
-  },
-  {
-    "id": "blue-light-blocking",
-    "title": "Dim & Block Blue Light",
-    "category": "Environment",
-    "description": "Dim overhead lights and avoid screens (or wear blue-light blockers) 1-2 hours before bed to prevent melatonin suppression.",
-    "tags": ["environment", "melatonin", "evening"],
-    "source_type": "Sleep Hygiene Guidelines"
   }
 ]

@@ -40,6 +40,10 @@ class HealthKitService {
 
     return this.mockData;
   }
+
+  setImportedData(newData) {
+    this.mockData = newData;
+  }
 }
 
 export default new HealthKitService();

@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, SafeAr
 import HealthKitService from './services/HealthKitService';
 import ChatService from './services/ChatService';
 import PerformanceDashboard from './components/PerformanceDashboard';
+import XMLParserService from './services/XMLParserService';
 
 export default function App() {
     const [healthData, setHealthData] = useState(null);
@@ -25,6 +26,26 @@ export default function App() {
         }
         loadData();
     }, []);
+
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const xmlContent = e.target.result;
+            const synthesizedData = XMLParserService.parseHealthExport(xmlContent);
+            if (synthesizedData) {
+                HealthKitService.setImportedData(synthesizedData);
+                setHealthData(synthesizedData);
+                setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: 'Health data successfully parsed and deployed to dashboard. Performance metrics synchronized.'
+                }]);
+            }
+        };
+        reader.readAsText(file);
+    };
 
     const sendMessage = async () => {
         if (!inputText.trim()) return;
@@ -50,6 +71,22 @@ export default function App() {
                 <ScrollView contentContainerStyle={styles.scrollContent}>
 
                     <PerformanceDashboard healthData={healthData} />
+
+                    <View style={styles.importSection}>
+                        <TouchableOpacity
+                            style={styles.importButton}
+                            onPress={() => document.getElementById('health-upload').click()}
+                        >
+                            <Text style={styles.importButtonText}>TACTICAL DATA INTAKE (EXPORT.XML)</Text>
+                        </TouchableOpacity>
+                        <input
+                            id="health-upload"
+                            type="file"
+                            style={{ display: 'none' }}
+                            onChange={handleFileUpload}
+                            accept=".xml"
+                        />
+                    </View>
 
                     <View style={styles.chatSection}>
                         <View style={styles.chatHeader}>
@@ -173,5 +210,26 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         letterSpacing: 1,
         fontSize: 12,
+    },
+    importSection: {
+        width: '100%',
+        marginBottom: 20,
+        alignItems: 'center',
+    },
+    importButton: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: '#38bdf8',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 4,
+        width: '90%',
+        alignItems: 'center',
+    },
+    importButtonText: {
+        color: '#38bdf8',
+        fontSize: 10,
+        fontWeight: '800',
+        letterSpacing: 2,
     },
 });
