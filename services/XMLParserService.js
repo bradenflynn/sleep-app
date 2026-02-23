@@ -51,26 +51,25 @@ class XMLParserService {
         // For MVP RegExp parsing, we just grab everything and average it, 
         // but in a production app we would filter by the `endDate` attribute.
 
-        const hrvRegex = /<Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN".*?value="([\d.]+)"/g;
+        const hrvRegex = /<Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN"[^>]*?value="([\d.]+)"/g;
         let match;
         while ((match = hrvRegex.exec(xmlString)) !== null) {
             results.hrv.push(parseFloat(match[1]));
         }
 
-        const rhrRegex = /<Record type="HKQuantityTypeIdentifierRestingHeartRate".*?value="([\d.]+)"/g;
+        const rhrRegex = /<Record type="HKQuantityTypeIdentifierRestingHeartRate"[^>]*?value="([\d.]+)"/g;
         while ((match = rhrRegex.exec(xmlString)) !== null) {
             results.rhr.push(parseFloat(match[1]));
         }
 
         // Capture sleep stages
-        const sleepRegex = /<Record type="HKCategoryTypeIdentifierSleepAnalysis".*?value="(.*?)".*?startDate="(.*?)".*?endDate="(.*?)"/g;
+        const sleepRegex = /<Record type="HKCategoryTypeIdentifierSleepAnalysis"[^>]*?value="(.*?)"[^>]*?startDate="(.*?)"[^>]*?endDate="(.*?)"/g;
         while ((match = sleepRegex.exec(xmlString)) !== null) {
             const type = match[1];
             const start = new Date(match[2]);
             const end = new Date(match[3]);
             const duration = Math.max(0, (end - start) / (1000 * 60)); // minutes
 
-            // In Apple Health, overlapping records exist. This is a simplified sum.
             results.sleep.push({ type, duration, end });
         }
 
@@ -83,20 +82,15 @@ class XMLParserService {
     synthesizeData(raw) {
         if (raw.hrv.length === 0 && raw.rhr.length === 0 && raw.sleep.length === 0) return null;
 
-        // Averages
         const avgHrv = raw.hrv.length > 0 ? Math.round(raw.hrv.reduce((a, b) => a + b, 0) / raw.hrv.length) : null;
         const avgRhr = raw.rhr.length > 0 ? Math.round(raw.rhr.reduce((a, b) => a + b, 0) / raw.rhr.length) : null;
 
-        // Summing Sleep (Simplified: assuming the XML contains roughly a night or average of nights)
-        // In a real app we would group by day. Here we just take the total recorded and assume it's one session
-        // to match the requested MVP behavior.
         let totalSleep = 0;
         let deepSleep = 0;
         let remSleep = 0;
 
         raw.sleep.forEach(s => {
-            // Apple strings: HKCategoryValueSleepAnalysisAsleepCore, AsleepDeep, AsleepREM, InBed
-            if (s.type.includes('Asleep') || s.type.includes('Unspecified')) {
+            if (s.type.includes('Asleep') || s.type.includes('Unspecified') || s.type.includes('InBed')) {
                 totalSleep += s.duration;
                 if (s.type.includes('Deep')) deepSleep += s.duration;
                 if (s.type.includes('REM')) remSleep += s.duration;
